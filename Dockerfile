@@ -12,10 +12,11 @@ ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} target/application.jar
 RUN java -Djarmode=layertools -jar target/application.jar extract --destination target/extracted
 
-FROM openjdk:19-alpine3.15 
+FROM openjdk:19-alpine3.15
 RUN addgroup -S demo && adduser -S demo -G demo
 VOLUME /tmp
 USER demo
+ENV DOCKER_BUILDKIT=1
 ARG EXTRACTED=/workspace/app/target/extracted
 WORKDIR application
 COPY --from=build ${EXTRACTED}/dependencies/ ./
