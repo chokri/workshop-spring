@@ -18,6 +18,6 @@ jobs:
 
     - name: Build the Docker image
       run: |
-        DOCKER_BUILDKIT=1 docker build . --tag ghcr.io/chokri/djangoapp:latest
+        DOCKER_BUILDKIT=1 docker build . --tag ghcr.io/chokri/springtest:latest
         docker run ghcr.io/chokri/springtest:latest
         docker push ghcr.io/chokri/springtest:latest
