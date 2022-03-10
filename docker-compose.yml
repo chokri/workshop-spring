@@ -5,6 +5,11 @@ services:
     restart: always
     ports:
       - 8080:8080
+    environment:
+      MYSQL_DATABASE: spring_demo
+      MYSQL_USER: spring_demo
+      MYSQL_PASSWORD: spring_demo
+      MYSQL_ROOT_PASSWORD: spring_demo
     depends_on:
       - mysql_db
     links:
