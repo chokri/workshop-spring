@@ -40,5 +40,5 @@ jobs:
       run: |
         mvn clean install
         DOCKER_BUILDKIT=1 docker build . --tag ghcr.io/chokri/springtest:latest
-        docker run ghcr.io/chokri/springtest:latest
+        docker image ls -a
         docker push ghcr.io/chokri/springtest:latest
