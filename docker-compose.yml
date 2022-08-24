@@ -1,27 +1,82 @@
-version: "3.7"
+version: "3.8"
+
+networks:
+  backend:
+    name: app
+    driver: bridge
+volumes:
+  postgres_data:
+    driver: local
+  keycloak_db:
+    driver: local
+
 services:
   api_service:
     build: .
     restart: always
     ports:
-      - 8080:8080
+      - 8088:8088
     environment:
       MYSQL_DATABASE: spring_demo
       MYSQL_USER: spring_demo
       MYSQL_PASSWORD: spring_demo
       MYSQL_ROOT_PASSWORD: spring_demo
+    networks:
+      - backend
     depends_on:
-      - mysql_db
-    links:
-      - mysql_db:app_db
-
-  mysql_db:
-    image: "mysql:8.0"
+      - db
+      - keycloak
+    healthcheck:
+      test: curl -f http://localhost:8088/health || exit 1
+      interval: 1m
+      timeout: 10s
+      retries: 2
+  
+  # Database Service (Postgres)
+  db:
+    image: postgres:14
+    container_name: postgres-db
     restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
     ports:
-      - 3306:3306
+      - "5432:5432"
     environment:
-      MYSQL_DATABASE: spring_demo
-      MYSQL_USER: spring_demo
-      MYSQL_PASSWORD: spring_demo
-      MYSQL_ROOT_PASSWORD: spring_demo
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hotes
+      PGDATA: /var/lib/postgresql/data/pgdata
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 1m
+      timeout: 10s
+      retries: 2
+
+  dbkeycloak:
+    image: postgres
+    volumes:
+      - keycloak_db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:legacy
+    environment:
+      DB_VENDOR: POSTGRES
+      DB_ADDR: dbkeycloak
+      DB_DATABASE: keycloak
+      DB_USER: keycloak
+      DB_SCHEMA: public
+      DB_PASSWORD: password
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: Pa55w0rd
+      # Uncomment the line below if you want to specify JDBC parameters. The parameter below is just an example, and it shouldn't be used in production without knowledge. It is highly recommended that you read the PostgreSQL JDBC driver documentation in order to use it.
+      #JDBC_PARAMS: "ssl=true"
+    ports:
+      - 8080:8080
+    depends_on:
+      - dbkeycloak
